@@ -1,10 +1,9 @@
-package optimizer
+package optimiser
 
 import (
 	"yardms/models"
 )
 
-// OptimizeQuery performs basic optimizations on the parsed query
 func OptimizeQuery(parsedQuery models.ParsedQuery) models.ParsedQuery {
 	// For now, just return the parsed query without changes
 	return parsedQuery

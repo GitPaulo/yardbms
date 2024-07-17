@@ -3,10 +3,53 @@ package execution
 import (
 	"fmt"
 	"yardms/models"
+	"yardms/storage"
+
+	"github.com/xwb1989/sqlparser"
 )
 
-// ExecuteQuery executes the optimized query
-func ExecuteQuery(optimizedQuery models.ParsedQuery) string {
-	// For now, just return a placeholder result
-	return fmt.Sprintf("Executed query: %s", optimizedQuery.String())
+func ExecuteQuery(optimizedQuery models.ParsedQuery, storage storage.Storage) string {
+	switch stmt := optimizedQuery.Stmt.(type) {
+	case *sqlparser.Select:
+		return handleSelect(stmt, storage)
+	case *sqlparser.DDL:
+		return handleDDL(stmt, storage)
+	case *sqlparser.Insert:
+		return handleInsert(stmt, storage)
+	default:
+		return "Unsupported query type"
+	}
+}
+
+func handleSelect(stmt *sqlparser.Select, storage storage.Storage) string {
+	tableName := stmt.From[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName).Name.String()
+	rows, err := storage.Select(tableName)
+	if err != nil {
+		return fmt.Sprintf("Error: %s", err)
+	}
+	return fmt.Sprintf("Rows: %v", rows)
+}
+
+func handleDDL(stmt *sqlparser.DDL, storage storage.Storage) string {
+	if stmt.Action == "create" {
+		err := storage.CreateTable(stmt.NewName.Name.String())
+		if err != nil {
+			return fmt.Sprintf("Error: %s", err)
+		}
+		return fmt.Sprintf("Table %s created", stmt.NewName.Name.String())
+	}
+	return "Unsupported DDL action"
+}
+
+func handleInsert(stmt *sqlparser.Insert, storage storage.Storage) string {
+	tableName := stmt.Table.Name.String()
+	row := make(map[string]interface{})
+	for i, col := range stmt.Columns {
+		row[col.String()] = sqlparser.String(stmt.Rows.(sqlparser.Values)[0][i])
+	}
+	err := storage.Insert(tableName, row)
+	if err != nil {
+		return fmt.Sprintf("Error: %s", err)
+	}
+	return fmt.Sprintf("Row inserted into %s", tableName)
 }
