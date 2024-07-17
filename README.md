@@ -1,5 +1,5 @@
-# yadms
-Yes A Database Management System.
+# yardms
+Yes A/nother Relational Database Management System.
 
 # Some plan IDK
 
