@@ -35,6 +35,7 @@ Rows: [map[id:1 name:'John Doe']]
 - [ ] Performance in storage w/ file system
   - Compression
   - ...
+- [ ] Logging
 
 ## Reference
 - https://github.com/awelm/simpledb
