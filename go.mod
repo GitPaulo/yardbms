@@ -1,4 +1,4 @@
-module yardms
+module yardbms
 
 go 1.22.3
 

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"yardms/db"
+	"yardbms/db"
 )
 
 func Start(storageType string) {
@@ -15,7 +15,7 @@ func Start(storageType string) {
 	db := db.New(storageType)
 
 	for {
-		fmt.Print("yardms> ")
+		fmt.Print("yardbms> ")
 		input, _ := reader.ReadString('\n')
 		if input == "exit\n" {
 			break

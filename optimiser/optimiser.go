@@ -1,7 +1,7 @@
 package optimiser
 
 import (
-	"yardms/models"
+	"yardbms/models"
 )
 
 func OptimizeQuery(parsedQuery models.ParsedQuery) models.ParsedQuery {

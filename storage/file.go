@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type FileStorage struct {
@@ -78,4 +79,60 @@ func (fs *FileStorage) Select(tableName string) ([]map[string]interface{}, error
 		return data, nil
 	}
 	return nil, fmt.Errorf("table %s does not exist", tableName)
+}
+
+func (fs *FileStorage) Update(tableName string, setClauses map[string]interface{}, whereClause string) error {
+	if err := fs.load(); err != nil {
+		return err
+	}
+	if _, exists := fs.tables[tableName]; !exists {
+		return fmt.Errorf("table %s does not exist", tableName)
+	}
+	for i, row := range fs.tables[tableName] {
+		if matchesWhereClauseFile(row, whereClause) {
+			for col, value := range setClauses {
+				fs.tables[tableName][i][col] = value
+			}
+		}
+	}
+	return fs.save()
+}
+
+func (fs *FileStorage) Delete(tableName string, whereClause string) error {
+	if err := fs.load(); err != nil {
+		return err
+	}
+	if _, exists := fs.tables[tableName]; !exists {
+		return fmt.Errorf("table %s does not exist", tableName)
+	}
+	var newTable []map[string]interface{}
+	for _, row := range fs.tables[tableName] {
+		if !matchesWhereClauseFile(row, whereClause) {
+			newTable = append(newTable, row)
+		}
+	}
+	fs.tables[tableName] = newTable
+	return fs.save()
+}
+
+func matchesWhereClauseFile(row map[string]interface{}, whereClause string) bool {
+	if whereClause == "" {
+		return true
+	}
+	// TODO: Finish WHERE Clause
+	// Basic for now
+	conditions := strings.Split(whereClause, "AND")
+	for _, condition := range conditions {
+		condition = strings.TrimSpace(condition)
+		parts := strings.Split(condition, "=")
+		if len(parts) != 2 {
+			continue
+		}
+		col := strings.TrimSpace(parts[0])
+		val := strings.TrimSpace(parts[1])
+		if fmt.Sprintf("%v", row[col]) != val {
+			return false
+		}
+	}
+	return true
 }

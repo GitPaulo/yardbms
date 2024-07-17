@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"yardms/repl"
+	"yardbms/repl"
 
 	"github.com/spf13/cobra"
 )
@@ -11,9 +11,9 @@ import (
 var storageType string
 
 var rootCmd = &cobra.Command{
-	Use:   "yardms",
+	Use:   "yardbms",
 	Short: "A simple RDBMS",
-	Long:  `yardms is a simple relational database management system.`,
+	Long:  `yardbms is a simple relational database management system.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		repl.Start(storageType)
 	},

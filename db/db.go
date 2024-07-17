@@ -1,10 +1,10 @@
 package db
 
 import (
-	"yardms/execution"
-	"yardms/optimiser"
-	"yardms/parse"
-	"yardms/storage"
+	"yardbms/execution"
+	"yardbms/optimiser"
+	"yardbms/parse"
+	"yardbms/storage"
 )
 
 type Database struct {

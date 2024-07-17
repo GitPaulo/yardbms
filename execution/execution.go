@@ -2,8 +2,8 @@ package execution
 
 import (
 	"fmt"
-	"yardms/models"
-	"yardms/storage"
+	"yardbms/models"
+	"yardbms/storage"
 
 	"github.com/xwb1989/sqlparser"
 )
@@ -16,6 +16,10 @@ func ExecuteQuery(optimizedQuery models.ParsedQuery, storage storage.Storage) st
 		return handleDDL(stmt, storage)
 	case *sqlparser.Insert:
 		return handleInsert(stmt, storage)
+	case *sqlparser.Update:
+		return handleUpdate(stmt, storage)
+	case *sqlparser.Delete:
+		return handleDelete(stmt, storage)
 	default:
 		return "Unsupported query type"
 	}
@@ -52,4 +56,28 @@ func handleInsert(stmt *sqlparser.Insert, storage storage.Storage) string {
 		return fmt.Sprintf("Error: %s", err)
 	}
 	return fmt.Sprintf("Row inserted into %s", tableName)
+}
+
+func handleUpdate(stmt *sqlparser.Update, storage storage.Storage) string {
+	tableName := stmt.TableExprs[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName).Name.String()
+	setClauses := make(map[string]interface{})
+	for _, expr := range stmt.Exprs {
+		setClauses[expr.Name.Name.String()] = sqlparser.String(expr.Expr)
+	}
+	whereClause := sqlparser.String(stmt.Where)
+	err := storage.Update(tableName, setClauses, whereClause)
+	if err != nil {
+		return fmt.Sprintf("Error: %s", err)
+	}
+	return fmt.Sprintf("Table %s updated", tableName)
+}
+
+func handleDelete(stmt *sqlparser.Delete, storage storage.Storage) string {
+	tableName := stmt.TableExprs[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName).Name.String()
+	whereClause := sqlparser.String(stmt.Where)
+	err := storage.Delete(tableName, whereClause)
+	if err != nil {
+		return fmt.Sprintf("Error: %s", err)
+	}
+	return fmt.Sprintf("Rows deleted from %s", tableName)
 }

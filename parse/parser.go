@@ -1,7 +1,7 @@
 package parse
 
 import (
-	"yardms/models"
+	"yardbms/models"
 
 	"github.com/xwb1989/sqlparser"
 )

@@ -1,18 +1,18 @@
-# yardms
+# yardbms
 Yes A/nother Relational Database Management System.
 
 ```sh
-yardms --storage=ram
+yardbms --storage=ram
 ```
 
 In the REPL,
 
 ```sql
-yardms> CREATE TABLE users;
+yardbms> CREATE TABLE users;
 Table users created
-yardms> INSERT INTO users (id, name) VALUES (1, 'John Doe');
+yardbms> INSERT INTO users (id, name) VALUES (1, 'John Doe');
 Row inserted into users
-yardms> SELECT * FROM users;
+yardbms> SELECT * FROM users;
 Rows: [map[id:1 name:'John Doe']]
 ```
 
@@ -20,6 +20,21 @@ Rows: [map[id:1 name:'John Doe']]
 
 ![image](https://github.com/user-attachments/assets/d6f7dc5b-49d8-4ebd-889e-8bb0c8d66378)
 
+## TODO
+
+- [ ] Evaluation of SQL
+  - ...
+- [ ] Indices for faster lookups
+  - ...
+- [ ] Transactions
+  - ... ACID crap
+- [ ] Query Optimizer
+  - ... idk
+- [ ] Dealing with deadlocks
+  - ... 
+- [ ] Performance in storage w/ file system
+  - Compression
+  - ...
 
 ## Reference
 - https://github.com/awelm/simpledb
