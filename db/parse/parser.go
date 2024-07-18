@@ -7,7 +7,7 @@ import (
 )
 
 func ParseQuery(query string) (models.ParsedQuery, error) {
-	stmt, err := sqlparser.Parse(query)
+	stmt, err := sqlparser.Parse(query) // Thanks sqlparser! TODO: Write own parser (copium)
 	if err != nil {
 		return models.ParsedQuery{}, err
 	}

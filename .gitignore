@@ -1,2 +1,6 @@
 # IDE
 .idea/
+
+# yardbms
+transaction.log
+database.json

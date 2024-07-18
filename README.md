@@ -27,7 +27,9 @@ Rows: [map[id:1 name:'John Doe']]
 - [ ] Indices for faster lookups
   - ...
 - [ ] Transactions
-  - ... ACID crap
+  - Atomicity and Durability: Transaction Log and WAL
+  - Isolation: Locking
+  - Consistency: Constraints and Validation
 - [ ] Query Optimizer
   - ... idk
 - [ ] Dealing with deadlocks

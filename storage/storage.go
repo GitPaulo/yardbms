@@ -2,20 +2,14 @@ package storage
 
 type Storage interface {
 	CreateTable(tableName string) error
-	Insert(tableName string, data map[string]interface{}) error
+
+	Insert(tableName string, data map[string]interface{}, transactionID string) error
 	Select(tableName string) ([]map[string]interface{}, error)
-	Update(tableName string, setClauses map[string]interface{}, whereClause string) error
-	Delete(tableName string, whereClause string) error
-}
+	Update(tableName string, setClauses map[string]interface{}, whereClause string, transactionID string) error
+	Delete(tableName string, whereClause string, transactionID string) error
 
-func NewRAMStorage() Storage {
-	return &RAMStorage{
-		tables: make(map[string][]map[string]interface{}),
-	}
-}
-
-func NewFileStorage() Storage {
-	return &FileStorage{
-		filePath: "data.json",
-	}
+	StartTransaction(id string)
+	CommitTransaction(id string)
+	RollbackTransaction(id string)
+	rollbackInsert(tableName string, row map[string]interface{})
 }

@@ -5,12 +5,22 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 type FileStorage struct {
-	filePath string
-	tables   map[string][]map[string]interface{}
+	filePath    string
+	tables      map[string][]map[string]interface{}
+	log         *TransactionLog
+	lockManager *LockManager
+}
+
+func NewFileStorage(filePath string) *FileStorage {
+	return &FileStorage{
+		filePath:    filePath,
+		tables:      make(map[string][]map[string]interface{}),
+		log:         NewTransactionLog(),
+		lockManager: NewLockManager(),
+	}
 }
 
 func (fs *FileStorage) load() error {
@@ -60,7 +70,7 @@ func (fs *FileStorage) CreateTable(tableName string) error {
 	return fs.save()
 }
 
-func (fs *FileStorage) Insert(tableName string, data map[string]interface{}) error {
+func (fs *FileStorage) Insert(tableName string, data map[string]interface{}, transactionID string) error {
 	if err := fs.load(); err != nil {
 		return err
 	}
@@ -68,6 +78,13 @@ func (fs *FileStorage) Insert(tableName string, data map[string]interface{}) err
 		return fmt.Errorf("table %s does not exist", tableName)
 	}
 	fs.tables[tableName] = append(fs.tables[tableName], data)
+	if transactionID != "" {
+		fs.log.RecordOperation(transactionID, Operation{
+			Type:      "INSERT",
+			TableName: tableName,
+			Row:       data,
+		})
+	}
 	return fs.save()
 }
 
@@ -81,7 +98,7 @@ func (fs *FileStorage) Select(tableName string) ([]map[string]interface{}, error
 	return nil, fmt.Errorf("table %s does not exist", tableName)
 }
 
-func (fs *FileStorage) Update(tableName string, setClauses map[string]interface{}, whereClause string) error {
+func (fs *FileStorage) Update(tableName string, setClauses map[string]interface{}, whereClause string, transactionID string) error {
 	if err := fs.load(); err != nil {
 		return err
 	}
@@ -89,16 +106,24 @@ func (fs *FileStorage) Update(tableName string, setClauses map[string]interface{
 		return fmt.Errorf("table %s does not exist", tableName)
 	}
 	for i, row := range fs.tables[tableName] {
-		if matchesWhereClauseFile(row, whereClause) {
+		if MatchesWhereClause(row, whereClause) {
 			for col, value := range setClauses {
+				oldValue := row[col]
 				fs.tables[tableName][i][col] = value
+				if transactionID != "" {
+					fs.log.RecordOperation(transactionID, Operation{
+						Type:      "UPDATE",
+						TableName: tableName,
+						Row:       map[string]interface{}{col: oldValue},
+					})
+				}
 			}
 		}
 	}
 	return fs.save()
 }
 
-func (fs *FileStorage) Delete(tableName string, whereClause string) error {
+func (fs *FileStorage) Delete(tableName string, whereClause string, transactionID string) error {
 	if err := fs.load(); err != nil {
 		return err
 	}
@@ -107,32 +132,41 @@ func (fs *FileStorage) Delete(tableName string, whereClause string) error {
 	}
 	var newTable []map[string]interface{}
 	for _, row := range fs.tables[tableName] {
-		if !matchesWhereClauseFile(row, whereClause) {
+		if !MatchesWhereClause(row, whereClause) {
 			newTable = append(newTable, row)
+		} else if transactionID != "" {
+			fs.log.RecordOperation(transactionID, Operation{
+				Type:      "DELETE",
+				TableName: tableName,
+				Row:       row,
+			})
 		}
 	}
 	fs.tables[tableName] = newTable
 	return fs.save()
 }
 
-func matchesWhereClauseFile(row map[string]interface{}, whereClause string) bool {
-	if whereClause == "" {
-		return true
-	}
-	// TODO: Finish WHERE Clause
-	// Basic for now
-	conditions := strings.Split(whereClause, "AND")
-	for _, condition := range conditions {
-		condition = strings.TrimSpace(condition)
-		parts := strings.Split(condition, "=")
-		if len(parts) != 2 {
-			continue
+func (fs *FileStorage) StartTransaction(id string) {
+	fs.log.StartTransaction(id)
+}
+
+func (fs *FileStorage) CommitTransaction(id string) {
+	fs.log.CommitTransaction(id)
+	fs.log.SaveToDisk("transaction.log")
+}
+
+func (fs *FileStorage) RollbackTransaction(id string) {
+	fs.log.RollbackTransaction(id, fs)
+	fs.log.SaveToDisk("transaction.log")
+}
+
+func (fs *FileStorage) rollbackInsert(tableName string, row map[string]interface{}) {
+	if table, exists := fs.tables[tableName]; exists {
+		for i, r := range table {
+			if MapsEqual(r, row) {
+				fs.tables[tableName] = append(fs.tables[tableName][:i], fs.tables[tableName][i+1:]...)
+				break
+			}
 		}
-		col := strings.TrimSpace(parts[0])
-		val := strings.TrimSpace(parts[1])
-		if fmt.Sprintf("%v", row[col]) != val {
-			return false
-		}
 	}
-	return true
 }
