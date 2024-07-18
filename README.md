@@ -26,8 +26,8 @@ import (
 )
 
 func main() {
-  // Initialize the database with RAM storage
-  yardbms := db.New("ram", "")
+  // Initialize the database with file storage, for RAM use "ram" and ""
+  yardbms := db.New("file", "file_path.json")
 
   // Create a table
   result, err := yardbms.ExecuteQuery("CREATE TABLE Users (id INT, name TEXT);")
