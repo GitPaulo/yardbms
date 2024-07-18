@@ -70,6 +70,17 @@ func (fs *FileStorage) CreateTable(tableName string) error {
 	return fs.save()
 }
 
+func (fs *FileStorage) DropTable(tableName string) error {
+	if err := fs.load(); err != nil {
+		return err
+	}
+	if _, exists := fs.tables[tableName]; exists {
+		delete(fs.tables, tableName)
+		return fs.save()
+	}
+	return fmt.Errorf("table %s does not exist", tableName)
+}
+
 func (fs *FileStorage) Insert(tableName string, data map[string]interface{}, transactionID string) error {
 	if err := fs.load(); err != nil {
 		return err

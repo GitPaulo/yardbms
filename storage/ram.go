@@ -32,6 +32,17 @@ func (rs *RAMStorage) CreateTable(tableName string) error {
 	return nil
 }
 
+func (rs *RAMStorage) DropTable(tableName string) error {
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+
+	if _, exists := rs.tables[tableName]; exists {
+		delete(rs.tables, tableName)
+		return nil
+	}
+	return fmt.Errorf("table %s does not exist", tableName)
+}
+
 func (rs *RAMStorage) Insert(tableName string, data map[string]interface{}, transactionID string) error {
 	rs.lockManager.LockTable(tableName)
 	defer rs.lockManager.UnlockTable(tableName)

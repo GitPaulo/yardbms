@@ -2,6 +2,7 @@ package storage
 
 type Storage interface {
 	CreateTable(tableName string) error
+	DropTable(tableName string) error
 
 	Insert(tableName string, data map[string]interface{}, transactionID string) error
 	Select(tableName string) ([]map[string]interface{}, error)
