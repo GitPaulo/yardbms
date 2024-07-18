@@ -90,6 +90,7 @@ func main() {
 
 ## TODO
 
+- [ ] Don't use JSON as file storage lol
 - [ ] Evaluation of SQL
   - ...
 - [ ] Indices for faster lookups
