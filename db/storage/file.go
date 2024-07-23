@@ -5,21 +5,23 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"yardbms/db/storage/locking"
+	"yardbms/db/storage/transactions"
 )
 
 type FileStorage struct {
 	filePath    string
 	tables      map[string][]map[string]interface{}
-	log         *TransactionLog
-	lockManager *LockManager
+	log         *transactions.TransactionLog
+	lockManager *locking.LockManager
 }
 
 func NewFileStorage(filePath string) *FileStorage {
 	return &FileStorage{
 		filePath:    filePath,
 		tables:      make(map[string][]map[string]interface{}),
-		log:         NewTransactionLog(),
-		lockManager: NewLockManager(),
+		log:         transactions.NewTransactionLog(),
+		lockManager: locking.NewLockManager(),
 	}
 }
 
@@ -90,7 +92,7 @@ func (fs *FileStorage) Insert(tableName string, data map[string]interface{}, tra
 	}
 	fs.tables[tableName] = append(fs.tables[tableName], data)
 	if transactionID != "" {
-		fs.log.RecordOperation(transactionID, Operation{
+		fs.log.RecordOperation(transactionID, transactions.Operation{
 			Type:      "INSERT",
 			TableName: tableName,
 			Row:       data,
@@ -122,7 +124,7 @@ func (fs *FileStorage) Update(tableName string, setClauses map[string]interface{
 				oldValue := row[col]
 				fs.tables[tableName][i][col] = value
 				if transactionID != "" {
-					fs.log.RecordOperation(transactionID, Operation{
+					fs.log.RecordOperation(transactionID, transactions.Operation{
 						Type:      "UPDATE",
 						TableName: tableName,
 						Row:       map[string]interface{}{col: oldValue},
@@ -146,7 +148,7 @@ func (fs *FileStorage) Delete(tableName string, whereClause string, transactionI
 		if !MatchesWhereClause(row, whereClause) {
 			newTable = append(newTable, row)
 		} else if transactionID != "" {
-			fs.log.RecordOperation(transactionID, Operation{
+			fs.log.RecordOperation(transactionID, transactions.Operation{
 				Type:      "DELETE",
 				TableName: tableName,
 				Row:       row,
@@ -171,7 +173,7 @@ func (fs *FileStorage) RollbackTransaction(id string) {
 	fs.log.SaveToDisk("transaction.log")
 }
 
-func (fs *FileStorage) rollbackInsert(tableName string, row map[string]interface{}) {
+func (fs *FileStorage) RollbackInsert(tableName string, row map[string]interface{}) {
 	if table, exists := fs.tables[tableName]; exists {
 		for i, r := range table {
 			if MapsEqual(r, row) {

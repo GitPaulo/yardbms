@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"yardbms/models"
-	"yardbms/storage"
+	"yardbms/db/models"
 
 	"github.com/xwb1989/sqlparser"
 )
 
-func ExecuteQuery(optimizedQuery models.ParsedQuery, storage storage.Storage, transactionID string) string {
+func ExecuteQuery(optimizedQuery models.ParsedQuery, storage models.Storage, transactionID string) string {
 	switch stmt := optimizedQuery.Stmt.(type) {
 	case *sqlparser.Select:
 		return handleSelect(stmt, storage)
@@ -27,7 +26,7 @@ func ExecuteQuery(optimizedQuery models.ParsedQuery, storage storage.Storage, tr
 	}
 }
 
-func handleSelect(stmt *sqlparser.Select, storage storage.Storage) string {
+func handleSelect(stmt *sqlparser.Select, storage models.Storage) string {
 	tableName := stmt.From[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName).Name.String()
 	rows, err := storage.Select(tableName)
 	if err != nil {
@@ -122,7 +121,7 @@ func findMax(rows []map[string]interface{}, column string) float64 {
 	return max
 }
 
-func handleDDL(stmt *sqlparser.DDL, storage storage.Storage) string {
+func handleDDL(stmt *sqlparser.DDL, storage models.Storage) string {
 	switch stmt.Action {
 	case "create":
 		err := storage.CreateTable(stmt.NewName.Name.String())
@@ -141,7 +140,7 @@ func handleDDL(stmt *sqlparser.DDL, storage storage.Storage) string {
 	}
 }
 
-func handleInsert(stmt *sqlparser.Insert, storage storage.Storage, transactionID string) string {
+func handleInsert(stmt *sqlparser.Insert, storage models.Storage, transactionID string) string {
 	tableName := stmt.Table.Name.String()
 	row := make(map[string]interface{})
 	for i, col := range stmt.Columns {
@@ -154,7 +153,7 @@ func handleInsert(stmt *sqlparser.Insert, storage storage.Storage, transactionID
 	return formatSuccess(fmt.Sprintf("Row inserted into %s", tableName))
 }
 
-func handleUpdate(stmt *sqlparser.Update, storage storage.Storage, transactionID string) string {
+func handleUpdate(stmt *sqlparser.Update, storage models.Storage, transactionID string) string {
 	tableName := stmt.TableExprs[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName).Name.String()
 	setClauses := make(map[string]interface{})
 	for _, expr := range stmt.Exprs {
@@ -168,7 +167,7 @@ func handleUpdate(stmt *sqlparser.Update, storage storage.Storage, transactionID
 	return formatSuccess(fmt.Sprintf("Table %s updated", tableName))
 }
 
-func handleDelete(stmt *sqlparser.Delete, storage storage.Storage, transactionID string) string {
+func handleDelete(stmt *sqlparser.Delete, storage models.Storage, transactionID string) string {
 	tableName := stmt.TableExprs[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName).Name.String()
 	whereClause := sqlparser.String(stmt.Where)
 	err := storage.Delete(tableName, whereClause, transactionID)

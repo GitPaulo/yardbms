@@ -2,19 +2,20 @@ package db
 
 import (
 	"yardbms/db/engine"
+	"yardbms/db/models"
 	"yardbms/db/optimiser"
 	"yardbms/db/parse"
-	"yardbms/storage"
+	"yardbms/db/storage"
 )
 
 // Database represents a database instance
 type Database struct {
-	storage storage.Storage
+	storage models.Storage
 }
 
 // New initializes a new database instance
 func New(storageType string, filePath string) *Database {
-	var st storage.Storage
+	var st models.Storage
 	if storageType == "file" {
 		st = storage.NewFileStorage(filePath)
 	} else {

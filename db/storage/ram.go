@@ -4,20 +4,22 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"yardbms/db/storage/locking"
+	"yardbms/db/storage/transactions"
 )
 
 type RAMStorage struct {
 	tables      map[string][]map[string]interface{}
-	log         *TransactionLog
-	lockManager *LockManager
+	log         *transactions.TransactionLog
+	lockManager *locking.LockManager
 	lock        sync.Mutex
 }
 
 func NewRAMStorage() *RAMStorage {
 	return &RAMStorage{
 		tables:      make(map[string][]map[string]interface{}),
-		log:         NewTransactionLog(),
-		lockManager: NewLockManager(),
+		log:         transactions.NewTransactionLog(),
+		lockManager: locking.NewLockManager(),
 	}
 }
 
@@ -56,7 +58,7 @@ func (rs *RAMStorage) Insert(tableName string, data map[string]interface{}, tran
 
 	rs.tables[tableName] = append(rs.tables[tableName], data)
 	if transactionID != "" {
-		rs.log.RecordOperation(transactionID, Operation{
+		rs.log.RecordOperation(transactionID, transactions.Operation{
 			Type:      "INSERT",
 			TableName: tableName,
 			Row:       data,
@@ -94,7 +96,7 @@ func (rs *RAMStorage) Update(tableName string, setClauses map[string]interface{}
 				oldValue := row[col]
 				rs.tables[tableName][i][col] = value
 				if transactionID != "" {
-					rs.log.RecordOperation(transactionID, Operation{
+					rs.log.RecordOperation(transactionID, transactions.Operation{
 						Type:      "UPDATE",
 						TableName: tableName,
 						Row:       map[string]interface{}{col: oldValue},
@@ -121,7 +123,7 @@ func (rs *RAMStorage) Delete(tableName string, whereClause string, transactionID
 		if !MatchesWhereClause(row, whereClause) {
 			newTable = append(newTable, row)
 		} else if transactionID != "" {
-			rs.log.RecordOperation(transactionID, Operation{
+			rs.log.RecordOperation(transactionID, transactions.Operation{
 				Type:      "DELETE",
 				TableName: tableName,
 				Row:       row,
@@ -154,7 +156,7 @@ func (rs *RAMStorage) RollbackTransaction(id string) {
 	}
 }
 
-func (rs *RAMStorage) rollbackInsert(tableName string, row map[string]interface{}) {
+func (rs *RAMStorage) RollbackInsert(tableName string, row map[string]interface{}) {
 	if table, exists := rs.tables[tableName]; exists {
 		for i, r := range table {
 			if MapsEqual(r, row) {

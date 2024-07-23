@@ -1,8 +1,9 @@
-package storage
+package transactions
 
 import (
 	"encoding/json"
 	"os"
+	"yardbms/db/models"
 )
 
 type TransactionLog struct {
@@ -44,12 +45,12 @@ func (log *TransactionLog) CommitTransaction(id string) {
 	delete(log.Transactions, id)
 }
 
-func (log *TransactionLog) RollbackTransaction(id string, storage Storage) {
+func (log *TransactionLog) RollbackTransaction(id string, storage models.Storage) {
 	if record, exists := log.Transactions[id]; exists {
 		for _, op := range record.Operations {
 			switch op.Type {
 			case "INSERT":
-				storage.rollbackInsert(op.TableName, op.Row)
+				storage.RollbackInsert(op.TableName, op.Row)
 			}
 		}
 		delete(log.Transactions, id)

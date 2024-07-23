@@ -1,4 +1,4 @@
-package storage
+package models
 
 type Storage interface {
 	CreateTable(tableName string) error
@@ -12,5 +12,5 @@ type Storage interface {
 	StartTransaction(id string)
 	CommitTransaction(id string)
 	RollbackTransaction(id string)
-	rollbackInsert(tableName string, row map[string]interface{})
+	RollbackInsert(tableName string, row map[string]interface{})
 }

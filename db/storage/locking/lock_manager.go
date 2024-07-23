@@ -1,4 +1,4 @@
-package storage
+package locking
 
 import "sync"
 

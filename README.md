@@ -10,7 +10,7 @@ yardbms --storage=ram
 In the REPL,
 
 ```sql
-yardbms> CREATE TABLE users;
+yardbms> CREATE TABLE users (id INT, name TEXT);
 Table users created
 yardbms> INSERT INTO users (id, name) VALUES (1, 'John Doe');
 Row inserted into users
@@ -86,29 +86,21 @@ func main() {
 }
 ```
 
-# Some plan IDK
+## Local 
+
+Simply run,
+
+```sh
+  go run main.go --storage=ram
+```
+
+## Some plan IDK
 
 ![image](https://github.com/user-attachments/assets/d6f7dc5b-49d8-4ebd-889e-8bb0c8d66378)
 
-## TODO
+## Progress and TODO
 
-- [ ] Don't use JSON as file storage lol
-- [ ] Evaluation of SQL
-  - ...
-- [ ] Indices for faster lookups
-  - ...
-- [ ] Transactions
-  - Atomicity and Durability: Transaction Log and WAL
-  - Isolation: Locking
-  - Consistency: Constraints and Validation
-- [ ] Query Optimizer
-  - ... idk
-- [ ] Dealing with deadlocks
-  - ... 
-- [ ] Performance in storage w/ file system
-  - Compression
-  - ...
-- [ ] Logging
+Please read the [TODO](TODO.md) file.
 
 ## Reference
 - https://github.com/awelm/simpledb
